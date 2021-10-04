@@ -11,11 +11,12 @@ module.exports = {
         })
       }
 
-      const tokenToWithdraw = { id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
+      const tokenToWithdraw = { name: constant.Vite_Token_Info.tokenName, id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
       let withdrawAmount = parseFloat(env.args[1]) * parseFloat('1e+' + tokenToWithdraw.dec)
 
       if (env.args[2]) {
         if (env.config.trusted_tokens[env.args[2].toUpperCase()]) {
+          tokenToWithdraw.name = env.args[2].toUpperCase()
           tokenToWithdraw.id = env.config.trusted_tokens[env.args[2].toUpperCase()][0]
           tokenToWithdraw.dec = env.config.trusted_tokens[env.args[2].toUpperCase()][1]
         }
@@ -50,7 +51,7 @@ module.exports = {
           if ([...lastBlock.data][43] === 'A') {
             client.v1.sendDm({
               recipient_id: env.senderId,
-              text: `Withdraw success!\nSended ${withdrawAmount / parseFloat('1e+' + tokenToWithdraw.dec)} ${env.args[2].toUpperCase()} to ${env.args[0]}.`
+              text: `Withdraw success!\nSended ${withdrawAmount / parseFloat('1e+' + tokenToWithdraw.dec)} ${tokenToWithdraw.name} to ${env.args[0]}.`
             })
 
             env.logStream.write(`[WITHDRAW] BY: ${env.senderId}, TO: ${env.args[0]}, TOKEN: ${tokenToWithdraw.id}, AMOUNT: ${withdrawAmount}\n`)
