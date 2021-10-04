@@ -44,6 +44,8 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
     accessSecret: CFG.access_secret
   })
 
+  const account = await userClient.v1.verifyCredentials()
+
   const streamApi = new TwitterApi(CFG.bearer_token)
 
   const rules = await streamApi.v2.streamRules()
@@ -59,7 +61,7 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
 
   await streamApi.v2.updateStreamRules({
     add: [
-      { value: '@KaffinP', tag: 'mention' }
+      { value: `@${account.screen_name}`, tag: 'mention' }
     ]
   })
   console.log('Added rules.')
@@ -77,8 +79,6 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
 
     tweetReplyCommands.get(command).execute(userClient, { tweetId: tweetId, wallet: myAccount, api: api, logStream: logStream, config: CFG, args: args })
   })
-
-  const account = await userClient.v1.verifyCredentials()
 
   const webhook = new Autohook({
     token: CFG.access_token,

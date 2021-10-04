@@ -28,7 +28,7 @@ module.exports = {
 
     client.v1.sendDm({
       recipient_id: env.senderId,
-      text: `Your statistics:\nTotal deposited: ${TotalDeposit[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}\nTotal withdrawed: ${TotalWithdraw[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}\nTotal tipped: ${TotalTips[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}\nTotal tip count: ${TotalTipCount[0]}`
+      text: `Your statistics:\nTotal deposit ${TotalDeposit[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}.\nTotal withdraw ${TotalWithdraw[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}.\nTotal tip ${TotalTips[0] / parseFloat('1e+' + tokenToQuery.dec)} ${tokenToQuery.name}.\nTotal tip count ${TotalTipCount[0]}.`
     })
   }
 }
