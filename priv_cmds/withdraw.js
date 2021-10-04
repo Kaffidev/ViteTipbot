@@ -7,17 +7,23 @@ module.exports = {
       if (!env.args[0] || !env.args[1]) {
         return client.v1.sendDm({
           recipient_id: env.senderId,
-          text: `Usage: withdraw (receipt) (amount) <token>\nExample: ?withdraw ${env.wallet.address} 1 VITE`
+          text: `Usage: withdraw (receipt) (amount|all) <token>\nExample: ?withdraw ${env.wallet.address} 1 VITE`
         })
       }
 
       const tokenToWithdraw = { id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
+      let withdrawAmount = parseFloat(env.args[1]) * parseFloat('1e+' + tokenToWithdraw.dec)
 
       if (env.args[2]) {
-        if (env.config.trusted_tokens[env.args[2]]) {
-          tokenToWithdraw.id = env.config.trusted_tokens[env.args[2]][0]
-          tokenToWithdraw.dec = env.config.trusted_tokens[env.args[2]][1]
+        if (env.config.trusted_tokens[env.args[2].toUpperCase()]) {
+          tokenToWithdraw.id = env.config.trusted_tokens[env.args[2].toUpperCase()][0]
+          tokenToWithdraw.dec = env.config.trusted_tokens[env.args[2].toUpperCase()][1]
         }
+      }
+
+      if (env.args[1].toUpperCase() === 'ALL') {
+        const balanceData = await env.api.callOffChainContract({ address: env.config.contractAddress, abi: getMethodAbi(env.config.contractAbi, 'getBalance'), code: Buffer.from(env.config.contractOffCBinary, 'hex').toString('base64'), params: [env.senderId, tokenToWithdraw.id] })
+        withdrawAmount = balanceData[0]
       }
 
       await client.v1.indicateDmTyping(env.senderId)
@@ -27,7 +33,7 @@ module.exports = {
         abi: env.config.contractAbi,
         methodName: 'withdraw',
         toAddress: env.config.contractAddress,
-        params: [env.senderId, env.args[0], tokenToWithdraw.id, (parseFloat(env.args[1]) * parseFloat('1e+' + tokenToWithdraw.dec)).toString()]
+        params: [env.senderId, env.args[0], tokenToWithdraw.id, withdrawAmount.toString()]
       }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
       await sBlock.autoSetPreviousAccountBlock()
@@ -44,14 +50,14 @@ module.exports = {
           if ([...lastBlock.data][43] === 'A') {
             client.v1.sendDm({
               recipient_id: env.senderId,
-              text: 'Withdraw success!'
+              text: `Withdraw success!\nSended ${withdrawAmount / parseFloat('1e+' + tokenToWithdraw.dec)} ${env.args[2].toUpperCase()} to ${env.args[0]}.`
             })
 
-            env.logStream.write(`[WITHDRAW] BY: ${env.senderId}, TO: ${env.args[0]}, TOKEN: ${tokenToWithdraw.id}, AMOUNT: ${env.args[1]}\n`)
+            env.logStream.write(`[WITHDRAW] BY: ${env.senderId}, TO: ${env.args[0]}, TOKEN: ${tokenToWithdraw.id}, AMOUNT: ${withdrawAmount}\n`)
           } else {
             client.v1.sendDm({
               recipient_id: env.senderId,
-              text: 'Withdraw failed!\n\nCheck your balance.'
+              text: 'Withdraw failed!\nCheck your balance.'
             })
           }
         }
@@ -59,8 +65,18 @@ module.exports = {
     } catch (err) {
       client.v1.sendDm({
         recipient_id: env.senderId,
-        text: `Withdraw failed!\n\nReason: ${err.message}`
+        text: `Withdraw failed!\nReason: ${err.message}`
       })
     }
   }
+}
+
+function getMethodAbi (contractAbi, methodName) {
+  for (let i = 0; i < contractAbi.length; i++) {
+    const abi = contractAbi[i]
+    if (abi.name === methodName) {
+      return abi
+    }
+  }
+  throw new Error('No such method: ' + methodName)
 }

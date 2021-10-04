@@ -14,13 +14,11 @@ module.exports = {
       }
     }
 
-    const sendMethodAbi = getMethodAbi(env.config.contractAbi, 'getBalance')
-
-    const cData = await env.api.callOffChainContract({ address: env.config.contractAddress, abi: sendMethodAbi, code: Buffer.from(env.config.contractOffCBinary, 'hex').toString('base64'), params: [env.senderId, tokenToQuery.id] })
+    const balanceData = await env.api.callOffChainContract({ address: env.config.contractAddress, abi: getMethodAbi(env.config.contractAbi, 'getBalance'), code: Buffer.from(env.config.contractOffCBinary, 'hex').toString('base64'), params: [env.senderId, tokenToQuery.id] })
 
     client.v1.sendDm({
       recipient_id: env.senderId,
-      text: `${tokenToQuery.name}\nBalance: ${cData[0] / parseFloat('1e+' + tokenToQuery.dec)}`
+      text: `${tokenToQuery.name}\nBalance: ${balanceData[0] / parseFloat('1e+' + tokenToQuery.dec)}`
     })
   }
 }
