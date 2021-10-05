@@ -10,12 +10,7 @@ module.exports = {
       })
     }
 
-    const tippingUser = await client.v2.userByUsername(env.args[0].replace('@', '')).catch(() => {
-      return client.v1.sendDm({
-        recipient_id: env.senderId,
-        text: 'Tip failed!\nReason: User not found.'
-      })
-    })
+    const tippingUser = await client.v2.userByUsername(env.args[0].replace('@', '')).catch(() => {})
 
     if (!tippingUser.data?.id) {
       return client.v1.sendDm({
@@ -24,14 +19,23 @@ module.exports = {
       })
     }
 
-    const tokenToTip = { name: 'VITE', id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
+    const tokenToTip = { symbol: constant.Vite_Token_Info.tokenSymbol, id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
 
     if (env.args[2] && env.args[2].toUpperCase() !== 'VITE') {
       if (env.config.trusted_tokens[env.args[2].toUpperCase()]) {
-        tokenToTip.name = env.args[2].toUpperCase()
+        tokenToTip.symbol = env.args[2].toUpperCase()
         tokenToTip.id = env.config.trusted_tokens[env.args[2].toUpperCase()][0]
         tokenToTip.dec = env.config.trusted_tokens[env.args[2].toUpperCase()][1]
       }
+    }
+
+    const tipAmount = parseFloat(env.args[1]).toFixed(tokenToTip.dec) * parseFloat('1e+' + tokenToTip.dec)
+
+    if (Math.sign(tipAmount) === 0) {
+      return client.v1.sendDm({
+        recipient_id: env.senderId,
+        text: 'Tip failed!\nReason: You should tip greater than zero.'
+      })
     }
 
     const sBlock = accountBlock.createAccountBlock('callContract', {
@@ -39,7 +43,7 @@ module.exports = {
       abi: env.config.contractAbi,
       methodName: 'tip',
       toAddress: env.config.contractAddress,
-      params: [env.senderId, tippingUser.data.id, tokenToTip.id, (parseFloat(env.args[1]) * parseFloat('1e+' + tokenToTip.dec)).toString()]
+      params: [env.senderId, tippingUser.data.id, tokenToTip.id, tipAmount.toString()]
     }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
     await sBlock.autoSetPreviousAccountBlock()
@@ -56,14 +60,14 @@ module.exports = {
         if ([...lastBlock.data][43] === 'A') {
           client.v1.sendDm({
             recipient_id: env.senderId,
-            text: `Tip success!\nTipped ${env.args[1]} ${tokenToTip.name} to ${env.args[0].replace('@', '')}.`
+            text: `Tip success!\nTipped ${tipAmount / parseFloat(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol} to ${env.args[0].replace('@', '')}.`
           })
 
           const sender = await client.v2.user(env.senderId)
 
           client.v1.sendDm({
             recipient_id: tippingUser.data.id,
-            text: `Received tip!\nSender: @${sender.data.username}\nAmount: ${env.args[1]} ${tokenToTip.name}`
+            text: `Received tip!\nSender: @${sender.data.username}\nAmount: ${tipAmount / parseFloat(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol}`
           }).catch(() => {})
         } else {
           client.v1.sendDm({

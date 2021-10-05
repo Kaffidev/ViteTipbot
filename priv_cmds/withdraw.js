@@ -12,7 +12,6 @@ module.exports = {
       }
 
       const tokenToWithdraw = { name: constant.Vite_Token_Info.tokenName, id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
-      let withdrawAmount = parseFloat(env.args[1]) * parseFloat('1e+' + tokenToWithdraw.dec)
 
       if (env.args[2]) {
         if (env.config.trusted_tokens[env.args[2].toUpperCase()]) {
@@ -21,6 +20,8 @@ module.exports = {
           tokenToWithdraw.dec = env.config.trusted_tokens[env.args[2].toUpperCase()][1]
         }
       }
+
+      let withdrawAmount = parseFloat(env.args[1]).toFixed(tokenToWithdraw.dec) * parseFloat('1e+' + tokenToWithdraw.dec)
 
       if (env.args[1].toUpperCase() === 'ALL') {
         const balanceData = await env.api.callOffChainContract({ address: env.config.contractAddress, abi: getMethodAbi(env.config.contractAbi, 'getBalance'), code: Buffer.from(env.config.contractOffCBinary, 'hex').toString('base64'), params: [env.senderId, tokenToWithdraw.id] })
