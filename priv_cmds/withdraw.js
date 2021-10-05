@@ -53,8 +53,6 @@ module.exports = {
               recipient_id: env.senderId,
               text: `Withdraw success!\nSended ${withdrawAmount / parseFloat('1e+' + tokenToWithdraw.dec)} ${tokenToWithdraw.name} to ${env.args[0]}.`
             })
-
-            env.logStream.write(`[WITHDRAW] BY: ${env.senderId}, TO: ${env.args[0]}, TOKEN: ${tokenToWithdraw.id}, AMOUNT: ${withdrawAmount}\n`)
           } else {
             client.v1.sendDm({
               recipient_id: env.senderId,

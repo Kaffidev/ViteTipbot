@@ -5,7 +5,6 @@ contract tipBotDB {
 
     mapping(string => mapping(tokenId => uint256)) totalDepositsOfUser;
     mapping(string => mapping(tokenId => uint256)) totalWithdrawsOfUser;
-
     mapping(string => uint256) totalTipCountOfUser;
     mapping(string => mapping(tokenId => uint256)) totalTipsOfUser;
 

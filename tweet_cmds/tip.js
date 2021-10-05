@@ -52,8 +52,6 @@ module.exports = {
               client.v2.user(data.data[0].in_reply_to_user_id).then(user => {
                 client.v1.reply(`Tip success!\n\nTipped ${env.args[0]} ${tokenToWithdraw.symbol} to ${user.data.username}.`, env.tweetId)
               })
-
-              env.logStream.write(`[TIP] FROM: ${data.data[0].author_id}, TO: ${data.includes.users[0].id}, TOKEN: ${tokenToWithdraw.id}, AMOUNT: ${env.args[0]}, TWEETID: ${env.tweetId}\n`)
             } else {
               client.v1.reply('Tip failed!\n\nCheck your balance.', env.tweetId)
             }

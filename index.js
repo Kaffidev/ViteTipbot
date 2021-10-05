@@ -8,7 +8,6 @@ const { RateLimiterMemory } = require('rate-limiter-flexible')
 
 const CFG = require('./config.json')
 const fs = require('fs')
-const logStream = fs.createWriteStream(`logs/${Date.now()}.txt`)
 
 const myAccount = wallet.getWallet(CFG.wallet_mnemonics).deriveAddress(0)
 
@@ -77,7 +76,7 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
 
     if (!tweetReplyCommands.has(command)) return
 
-    tweetReplyCommands.get(command).execute(userClient, { tweetId: tweetId, wallet: myAccount, api: api, logStream: logStream, config: CFG, args: args })
+    tweetReplyCommands.get(command).execute(userClient, { tweetId: tweetId, wallet: myAccount, api: api, config: CFG, args: args })
   })
 
   const webhook = new Autohook({
@@ -115,12 +114,11 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
       const command = args.shift().replace(CFG.botPrefix, '').toLowerCase()
 
       if (!privateCommands.has(command)) return userClient.v1.sendDm({ recipient_id: message.message_create.sender_id, text: 'Command not found!?' })
-      privateCommands.get(command).execute(userClient, event, { wallet: myAccount, api: api, logStream: logStream, senderId: message.message_create.sender_id, config: CFG, args })
+      privateCommands.get(command).execute(userClient, event, { wallet: myAccount, api: api, senderId: message.message_create.sender_id, config: CFG, args })
     }).catch(() => { })
   })
 
   await webhook.start()
-
   await webhook.subscribe({ oauth_token: CFG.access_token, oauth_token_secret: CFG.access_secret })
 
   const depositListener = await api.subscribe('createAccountBlockSubscription')
@@ -129,22 +127,20 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
     const block = await api.request('ledger_getAccountBlockByHash', result[0].hash)
 
     if (block?.toAddress !== myAccount.address) return
+    if (block.blockType !== 2) return
 
-    if (Object.values(CFG.trusted_tokens).some(r => r.includes(block.tokenInfo.tokenId))) {
-      if (block.blockType !== 2) return
-      if (block.data === null) return
+    const receiveBlock = accountBlock.createAccountBlock('receive', {
+      address: myAccount.address,
+      sendBlockHash: result[0].hash
+    }).setProvider(api).setPrivateKey(myAccount.privateKey)
 
-      const receiveBlock = accountBlock.createAccountBlock('receive', {
-        address: myAccount.address,
-        sendBlockHash: result[0].hash
-      }).setProvider(api).setPrivateKey(myAccount.privateKey)
+    await receiveBlock.autoSetPreviousAccountBlock()
+    await receiveBlock.sign().send()
 
-      await receiveBlock.autoSetPreviousAccountBlock()
-      await receiveBlock.sign().send()
-
+    if (Object.values(CFG.trusted_tokens).some(r => r.includes(block.tokenInfo.tokenId)) || !block.data === null) {
       const memo = Buffer.from(block.data, 'base64').toString('utf8')
 
-      const sBlock = accountBlock.createAccountBlock('callContract', {
+      const depositBlock = accountBlock.createAccountBlock('callContract', {
         address: myAccount.address,
         abi: CFG.contractAbi,
         methodName: 'deposit',
@@ -154,11 +150,20 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
         params: [memo]
       }).setProvider(api).setPrivateKey(myAccount.privateKey)
 
-      await sBlock.autoSetPreviousAccountBlock()
-      await sBlock.sign().send()
+      await depositBlock.autoSetPreviousAccountBlock()
+      await depositBlock.sign().send()
 
       userClient.v1.sendDm({ recipient_id: memo, text: `Deposit received!:\n${parseInt(block.amount) / parseFloat('1e+' + block.tokenInfo.decimals)} ${block.tokenInfo.tokenSymbol}` })
-      logStream.write(`[DEPOSIT] FROM: ${block.fromAddress}, TO: ${memo}, TOKEN: ${block.tokenInfo.tokenId}, AMOUNT: ${block.amount}\n`)
+    } else {
+      const refundBlock = accountBlock.createAccountBlock('send', {
+        address: myAccount.address,
+        amount: block.amount,
+        tokenId: block.tokenInfo.tokenId,
+        toAddress: block.fromAddress
+      }).setProvider(api).setPrivateKey(myAccount.privateKey)
+
+      await refundBlock.autoSetPreviousAccountBlock()
+      await refundBlock.sign().send()
     }
   })
 

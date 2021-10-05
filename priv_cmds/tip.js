@@ -65,8 +65,6 @@ module.exports = {
             recipient_id: tippingUser.data.id,
             text: `Received tip!\nSender: @${sender.data.username}\nAmount: ${env.args[1]} ${tokenToTip.name}`
           }).catch(() => {})
-
-          env.logStream.write(`[TIP] FROM: ${env.senderId}, TO: ${tippingUser.data.id}, TOKEN: ${tokenToTip.id}, AMOUNT: ${env.args[1]}\n`)
         } else {
           client.v1.sendDm({
             recipient_id: env.senderId,

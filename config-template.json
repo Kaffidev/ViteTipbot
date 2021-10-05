@@ -2,11 +2,11 @@
   "botPrefix": "?",
 
   "vite_node_WS": "Your node WS api address",
-
   "wallet_mnemonics": "Secret shhhh",
 
   "trusted_tokens": { "VITE": ["tti_5649544520544f4b454e6e40", 18],
-                      "VITC": [ "tti_22d0b205bed4d268a05dfc3c", 18] },
+                      "VITC": [ "tti_22d0b205bed4d268a05dfc3c", 18],
+                      "NANO": [ "tti_29a2af20212b985e9d49e899", 30 ] },
 
   "bearer_token": "Get this from Twitter Api",
   "consumer_key": "Get this from Twitter Api",
