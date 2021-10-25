@@ -11,7 +11,7 @@ module.exports = {
         })
       }
 
-      const tokenToWithdraw = { name: constant.Vite_Token_Info.tokenName, id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
+      const tokenToWithdraw = { name: 'VITE', id: constant.Vite_TokenId, dec: constant.Vite_Token_Info.decimals }
 
       if (env.args[2]) {
         if (env.config.trusted_tokens[env.args[2].toUpperCase()]) {
