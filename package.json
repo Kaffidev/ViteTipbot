@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "@vite/vitejs": "^2.3.14",
-    "@vite/vitejs-ws": "^2.3.14",
+    "@vite/vitejs": "^2.3.16",
+    "@vite/vitejs-ws": "^2.3.16",
     "rate-limiter-flexible": "^2.2.4",
     "twitter-api-v2": "^1.4.1",
     "twitter-autohook": "^1.7.2"
