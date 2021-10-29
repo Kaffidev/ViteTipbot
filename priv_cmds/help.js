@@ -3,7 +3,7 @@ module.exports = {
   execute (client, event, env) {
     client.v1.sendDm({
       recipient_id: env.senderId,
-      text: 'Commands:\nhelp, deposit, withdraw, balance(bal), tip, statistics(stats)\nReply(tweet) Commands: tip (amount) <token>\n\nHelpful links:\nhttps://vite.org/ - Vites Official Website'
+      text: 'Commands:\nhelp, deposit, withdraw, balance(bal), tip, statistics(stats)\n\nReply(tweet) Commands:\ntip (amount) <token>\n\nFor more info execute command without args.'
     })
   }
 }
