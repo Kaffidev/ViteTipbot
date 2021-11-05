@@ -108,7 +108,7 @@ const api = new ViteAPI(new WS_RPC(CFG.vite_node_WS, 6e5, {
     await userClient.v1.markDmAsRead(message.id, message.message_create.sender_id)
 
     rateLimiter.consume(message.message_create.sender_id).then(() => {
-      if (!message.message_create.message_data.text.startsWith(CFG.botPrefix)) return userClient.v1.sendDm({ recipient_id: message.message_create.sender_id, text: `Hey, prefix is ${CFG.botPrefix}\nUse help for more information :)` })
+      if (!message.message_create.message_data.text.startsWith(CFG.botPrefix)) return userClient.v1.sendDm({ recipient_id: message.message_create.sender_id, text: `Hey, prefix is ${CFG.botPrefix}\nUse ${CFG.botPrefix}help for more information :)` })
 
       const args = message.message_create.message_data.text.slice(1).trim().split(/ +/)
       const command = args.shift().replace(CFG.botPrefix, '').toLowerCase()
