@@ -1,4 +1,5 @@
 const { accountBlock, constant } = require('@vite/vitejs')
+const fromExponential = require('from-exponential')
 
 module.exports = {
   command: 'tip',
@@ -31,7 +32,7 @@ module.exports = {
 
     const tipAmount = parseFloat(env.args[1]).toFixed(tokenToTip.dec) * parseFloat('1e+' + tokenToTip.dec)
 
-    if (Math.sign(tipAmount) === 0) {
+    if (Math.sign(tipAmount) !== 1) {
       return client.v1.sendDm({
         recipient_id: env.senderId,
         text: 'Tip failed!\nReason: You should tip greater than zero.'
@@ -43,7 +44,7 @@ module.exports = {
       abi: env.config.contractAbi,
       methodName: 'tip',
       toAddress: env.config.contractAddress,
-      params: [env.senderId, tippingUser.data.id, tokenToTip.id, tipAmount.toString()]
+      params: [env.senderId, tippingUser.data.id, tokenToTip.id, fromExponential(tipAmount)]
     }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
     await sBlock.autoSetPreviousAccountBlock()

@@ -1,4 +1,5 @@
 const { constant, accountBlock } = require('@vite/vitejs')
+const fromExponential = require('from-exponential')
 
 module.exports = {
   command: 'tip',
@@ -17,7 +18,7 @@ module.exports = {
 
     const tipAmount = parseFloat(env.args[0]).toFixed(tokenToTip.dec) * parseFloat('1e+' + tokenToTip.dec)
 
-    if (Math.sign(tipAmount) === 0) return client.v1.reply('Tip failed!\n\nYou should tip greater than zero.', env.tweetId)
+    if (Math.sign(tipAmount) !== 1) return client.v1.reply('Tip failed!\n\nYou should tip greater than zero.', env.tweetId)
 
     client.v2.tweets(env.tweetId, { expansions: 'in_reply_to_user_id', 'tweet.fields': 'author_id' }).then(async data => {
       if (!data.data[0].in_reply_to_user_id) {
@@ -32,7 +33,7 @@ module.exports = {
         abi: env.config.contractAbi,
         methodName: 'tip',
         toAddress: env.config.contractAddress,
-        params: [data.data[0].author_id, data.data[0].in_reply_to_user_id, tokenToTip.id, tipAmount.toString()]
+        params: [data.data[0].author_id, data.data[0].in_reply_to_user_id, tokenToTip.id, fromExponential(tipAmount)]
       }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
       await tipBlock.autoSetPreviousAccountBlock()
