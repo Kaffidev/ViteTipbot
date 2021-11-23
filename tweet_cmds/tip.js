@@ -1,5 +1,4 @@
 const { constant, accountBlock } = require('@vite/vitejs')
-const fromExponential = require('from-exponential')
 
 module.exports = {
   command: 'tip',
@@ -16,7 +15,7 @@ module.exports = {
       }
     }
 
-    const tipAmount = parseFloat(env.args[0]).toFixed(tokenToTip.dec) * parseFloat('1e+' + tokenToTip.dec)
+    const tipAmount = parseFloat(env.args[0]).toFixed(tokenToTip.dec) * parseInt('1e+' + tokenToTip.dec)
 
     if (Math.sign(tipAmount) !== 1) return client.v1.reply('Tip failed!\n\nYou should tip greater than zero.', env.tweetId)
 
@@ -33,7 +32,7 @@ module.exports = {
         abi: env.config.contractAbi,
         methodName: 'tip',
         toAddress: env.config.contractAddress,
-        params: [data.data[0].author_id, data.data[0].in_reply_to_user_id, tokenToTip.id, fromExponential(tipAmount)]
+        params: [data.data[0].author_id, data.data[0].in_reply_to_user_id, tokenToTip.id, BigInt(tipAmount).toString()]
       }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
       await tipBlock.autoSetPreviousAccountBlock()
@@ -49,7 +48,7 @@ module.exports = {
 
           if ([...lastBlock.data][43] === 'A') {
             client.v2.user(data.data[0].in_reply_to_user_id).then(user => {
-              client.v1.reply(`Tip success!\n\nTipped ${tipAmount / parseFloat(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol} to ${user.data.username}.`, env.tweetId)
+              client.v1.reply(`Tip success!\n\nTipped ${tipAmount / parseInt(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol} to ${user.data.username}.`, env.tweetId)
             })
           } else {
             client.v1.reply('Tip failed!\n\nCheck your balance.', env.tweetId)

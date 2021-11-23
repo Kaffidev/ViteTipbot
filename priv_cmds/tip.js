@@ -1,5 +1,4 @@
 const { accountBlock, constant } = require('@vite/vitejs')
-const fromExponential = require('from-exponential')
 
 module.exports = {
   command: 'tip',
@@ -30,7 +29,7 @@ module.exports = {
       }
     }
 
-    const tipAmount = parseFloat(env.args[1]).toFixed(tokenToTip.dec) * parseFloat('1e+' + tokenToTip.dec)
+    const tipAmount = parseFloat(env.args[1]).toFixed(tokenToTip.dec) * parseInt('1e+' + tokenToTip.dec)
 
     if (Math.sign(tipAmount) !== 1) {
       return client.v1.sendDm({
@@ -44,7 +43,7 @@ module.exports = {
       abi: env.config.contractAbi,
       methodName: 'tip',
       toAddress: env.config.contractAddress,
-      params: [env.senderId, tippingUser.data.id, tokenToTip.id, fromExponential(tipAmount)]
+      params: [env.senderId, tippingUser.data.id, tokenToTip.id, BigInt(tipAmount).toString()]
     }).setProvider(env.api).setPrivateKey(env.wallet.privateKey)
 
     await sBlock.autoSetPreviousAccountBlock()
@@ -61,14 +60,14 @@ module.exports = {
         if ([...lastBlock.data][43] === 'A') {
           client.v1.sendDm({
             recipient_id: env.senderId,
-            text: `Tip success!\nTipped ${tipAmount / parseFloat(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol} to ${env.args[0].replace('@', '')}.`
+            text: `Tip success!\nTipped ${tipAmount / parseInt(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol} to ${env.args[0].replace('@', '')}.`
           })
 
           const sender = await client.v2.user(env.senderId)
 
           client.v1.sendDm({
             recipient_id: tippingUser.data.id,
-            text: `Received tip!\nSender: @${sender.data.username}\nAmount: ${tipAmount / parseFloat(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol}`
+            text: `Received tip!\nSender: @${sender.data.username}\nAmount: ${tipAmount / parseInt(`1e+${tokenToTip.dec}`)} ${tokenToTip.symbol}`
           }).catch(() => {})
         } else {
           client.v1.sendDm({
